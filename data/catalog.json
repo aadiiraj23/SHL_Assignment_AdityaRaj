@@ -1,0 +1,393 @@
+{
+  "scraped_at": "2026-05-16T14:49:00Z",
+  "total": 32,
+  "assessments": [
+    {
+      "name": "Verify - Numerical Reasoning",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/verify-numerical-reasoning/",
+      "test_type": "A",
+      "description": "Measures numerical reasoning ability for graduate and managerial roles.",
+      "remote_testing": true,
+      "adaptive": true,
+      "duration_minutes": 18,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Verify - Verbal Reasoning",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/verify-verbal-reasoning/",
+      "test_type": "A",
+      "description": "Measures verbal reasoning ability for graduate and managerial roles.",
+      "remote_testing": true,
+      "adaptive": true,
+      "duration_minutes": 18,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Verify - Inductive Reasoning",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/verify-inductive-reasoning/",
+      "test_type": "A",
+      "description": "Measures inductive reasoning and abstract thinking ability.",
+      "remote_testing": true,
+      "adaptive": true,
+      "duration_minutes": 24,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Verify - Deductive Reasoning",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/verify-deductive-reasoning/",
+      "test_type": "A",
+      "description": "Measures deductive reasoning ability for professional roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 20,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Verify - Mechanical Comprehension",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/verify-mechanical-comprehension/",
+      "test_type": "A",
+      "description": "Measures understanding of mechanical and physical concepts.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 25,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "OPQ32r",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/opq32r/",
+      "test_type": "P",
+      "description": "Occupational personality questionnaire measuring 32 personality characteristics relevant to work performance.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 25,
+      "languages": [
+        "English",
+        "French",
+        "German",
+        "Spanish"
+      ]
+    },
+    {
+      "name": "MQ",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/mq/",
+      "test_type": "P",
+      "description": "Motivation questionnaire assessing factors that increase or decrease motivation at work.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 25,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Situational Judgement Test",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/situational-judgement/",
+      "test_type": "S",
+      "description": "Measures judgment in realistic workplace scenarios relevant to the job role.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 30,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Graduate Potential",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/graduate-potential/",
+      "test_type": "A",
+      "description": "Assesses cognitive potential of graduate-level candidates across verbal, numerical and inductive reasoning.",
+      "remote_testing": true,
+      "adaptive": true,
+      "duration_minutes": 36,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Java 8 (New)",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/java-8-new/",
+      "test_type": "K",
+      "description": "Assesses knowledge and skills in Java 8 programming language for developer roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 30,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Python (New)",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/python-new/",
+      "test_type": "K",
+      "description": "Assesses knowledge and skills in Python programming for developer and data science roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 30,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "JavaScript (New)",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/javascript-new/",
+      "test_type": "K",
+      "description": "Assesses knowledge of JavaScript programming including ES6 and modern frameworks.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 30,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "SQL (New)",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/sql-new/",
+      "test_type": "K",
+      "description": "Assesses SQL knowledge and database query skills for developer and analyst roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 30,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Technology Professional 8.0 - New",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/technology-professional-8-0-new/",
+      "test_type": "K",
+      "description": "Comprehensive assessment for technology professionals covering core IT competencies.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 45,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Entry Level Sales 7.1 (International)",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/entry-level-sales-solution-7-1-international/",
+      "test_type": "B",
+      "description": "Assesses potential for entry level sales roles including drive and customer focus.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 36,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Sales Representative Solution",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/sales-representative-solution/",
+      "test_type": "B",
+      "description": "Predicts sales performance through behavioral and cognitive measures.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 40,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Supervisory Solution 7.1",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/supervisory-solution-7-1/",
+      "test_type": "B",
+      "description": "Assesses potential for supervisory and team leader roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 40,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Customer Contact Center Solution",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/customer-contact-center-solution/",
+      "test_type": "S",
+      "description": "Evaluates skills and behaviors for customer contact center roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 35,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Numerical Reasoning (Interactive)",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/numerical-reasoning-interactive/",
+      "test_type": "A",
+      "description": "Interactive numerical reasoning assessment with real-world data interpretation tasks.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 25,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Verbal Reasoning (Interactive)",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/verbal-reasoning-interactive/",
+      "test_type": "A",
+      "description": "Interactive verbal reasoning assessment using realistic workplace documents.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 25,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Checking",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/checking/",
+      "test_type": "A",
+      "description": "Measures speed and accuracy in checking detailed information.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 10,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Calculation",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/calculation/",
+      "test_type": "A",
+      "description": "Measures basic numerical calculation ability for clerical and administrative roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 10,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Reading Comprehension",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/reading-comprehension/",
+      "test_type": "A",
+      "description": "Measures ability to read and understand written information.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 15,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Workplace English",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/workplace-english/",
+      "test_type": "K",
+      "description": "Assesses English language proficiency in workplace contexts.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 30,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "AutoCAD (New)",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/autocad-new/",
+      "test_type": "K",
+      "description": "Assesses knowledge and skills in AutoCAD for engineering and design roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 30,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Microsoft Excel (New)",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/microsoft-excel-new/",
+      "test_type": "K",
+      "description": "Assesses Microsoft Excel skills for administrative and analyst roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 30,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Microsoft Word (New)",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/microsoft-word-new/",
+      "test_type": "K",
+      "description": "Assesses Microsoft Word proficiency for administrative roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 30,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "General Mental Ability",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/general-mental-ability/",
+      "test_type": "A",
+      "description": "Broad cognitive ability assessment measuring reasoning across verbal, numerical and abstract domains.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 30,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Dependability and Safety Instrument",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/dependability-and-safety-instrument/",
+      "test_type": "P",
+      "description": "Measures dependability, safety orientation and reliability for operational roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 20,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Sales Aptitude Test",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/sales-aptitude-test/",
+      "test_type": "A",
+      "description": "Assesses cognitive aptitude and numerical skills for sales roles.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 25,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Call Center Applicant Inventory",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/call-center-applicant-inventory/",
+      "test_type": "B",
+      "description": "Predicts performance in call center roles through behavioral assessment.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 30,
+      "languages": [
+        "English"
+      ]
+    },
+    {
+      "name": "Retail Solution 7.1",
+      "url": "https://www.shl.com/solutions/products/product-catalog/view/retail-solution-7-1/",
+      "test_type": "B",
+      "description": "Predicts retail job performance through situational and behavioral measures.",
+      "remote_testing": true,
+      "adaptive": false,
+      "duration_minutes": 36,
+      "languages": [
+        "English"
+      ]
+    }
+  ]
+}

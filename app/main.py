@@ -1,11 +1,9 @@
 import os
 import time
-
 import structlog
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
 from app.agent import SHLAgent
 from app.catalog import get_catalog_store
 from app.llm_client import get_llm_client
@@ -22,7 +20,6 @@ def _configure_logging() -> None:
         "CRITICAL": 50,
     }
     level = level_map.get(level_name, 20)
-
     structlog.configure(
         processors=[
             structlog.processors.TimeStamper(fmt="iso"),
@@ -67,7 +64,6 @@ async def timing_middleware(request: Request, call_next):
             error=str(exc),
         )
         raise
-
     duration_ms = round((time.time() - start_time) * 1000, 2)
     logger.info(
         "request_completed",
@@ -84,12 +80,19 @@ def health() -> dict:
     try:
         catalog = get_catalog_store()
         size = catalog.size()
+        agent_ready = True
     except Exception:
         size = 0
-    return {"status": "healthy", "timestamp": time.time(), "catalog_size": size}
+        agent_ready = False
+    return {
+        "status": "ok",
+        "catalog_size": size,
+        "agent_ready": agent_ready,
+        "version": "1.0.0"
+    }
 
 
-@app.post("/api/chat", response_model=ChatResponse)
+@app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     try:
         catalog = get_catalog_store()
@@ -102,9 +105,9 @@ async def chat(request: ChatRequest):
         error_response = ChatResponse(
             reply="I encountered an internal server error. Please try again.",
             recommendations=[],
-            end_of_conversation=True,
+            end_of_conversation=False,
         )
         return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.HTTP_200_OK,
             content=error_response.model_dump(),
         )
