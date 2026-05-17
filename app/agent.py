@@ -137,10 +137,22 @@ class SHLAgent:
         from app.prompts import CLARIFY_PROMPT_TEMPLATE
         # Get raw LLM output; allow exceptions to bubble to top-level for centralized handling
         reply_raw = await self.llm.complete(system=CLARIFY_PROMPT_TEMPLATE, messages=messages, json_mode=False)
+        
+        # Try to parse as JSON first, then fall back to plain text
         if isinstance(reply_raw, dict):
             reply_text = str(reply_raw.get("reply", ""))
+        elif isinstance(reply_raw, str):
+            try:
+                parsed = safe_json_parse(reply_raw)
+                if parsed and "reply" in parsed:
+                    reply_text = str(parsed.get("reply", ""))
+                else:
+                    reply_text = str(reply_raw)
+            except Exception:
+                reply_text = str(reply_raw or "")
         else:
             reply_text = str(reply_raw or "")
+        
         return ChatResponse(reply=reply_text, recommendations=[], end_of_conversation=False)
 
     async def _handle_compare(self, messages: list[Message]) -> ChatResponse:
