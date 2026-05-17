@@ -6,6 +6,10 @@ services:
     startCommand: gunicorn app.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120 --access-logfile - --error-logfile - --log-level info
     envVars:
       - key: GEMINI_API_KEY
-        sync: false
+        generateValue: false
       - key: PORT
         value: 8000
+      - key: CATALOG_PATH
+        value: /app/data/catalog.json
+      - key: LOG_LEVEL
+        value: INFO

@@ -30,6 +30,7 @@ class GeminiClient:
 
         genai.configure(api_key=key)
         self.model = genai.GenerativeModel("gemini-1.5-flash")
+        self.request_timeout_seconds = float(os.getenv("LLM_TIMEOUT_SECONDS", "30"))
         self.logger = structlog.get_logger(__name__)
 
     def _build_prompt(self, system: str, messages: list, json_mode: bool = False) -> str:
@@ -83,17 +84,20 @@ class GeminiClient:
 
         try:
             response = await asyncio.wait_for(
-                self.model.generate_content_async(
+                asyncio.to_thread(
+                    self.model.generate_content,
                     prompt,
                     generation_config=gen_config,
                 ),
-                timeout=30,
+                timeout=self.request_timeout_seconds,
             )
             text = getattr(response, "text", "") or ""
             cleaned = self._strip_json_fences(text)
             return cleaned.strip()
         except asyncio.TimeoutError as exc:
-            self.logger.warning("llm_completion_timeout", timeout_seconds=30)
+            self.logger.warning(
+                "llm_completion_timeout", timeout_seconds=self.request_timeout_seconds
+            )
             raise LLMException("LLM completion timed out") from exc
         except Exception as exc:
             self.logger.exception("llm_completion_failed", error=str(exc))

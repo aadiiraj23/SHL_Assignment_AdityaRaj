@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -65,7 +66,7 @@ def test_get_llm_client_raises_without_api_key(monkeypatch: pytest.MonkeyPatch) 
 @pytest.mark.asyncio
 async def test_complete_with_fallback_returns_fallback_on_error() -> None:
     client = _build_client()
-    client.model.generate_content_async = AsyncMock(side_effect=Exception("boom"))
+    client.model.generate_content = MagicMock(side_effect=Exception("boom"))
 
     with pytest.raises(llm_client.LLMException):
         await client.complete("System", [{"role": "user", "content": "Hi"}])
@@ -74,7 +75,13 @@ async def test_complete_with_fallback_returns_fallback_on_error() -> None:
 @pytest.mark.asyncio
 async def test_complete_times_out_fast() -> None:
     client = _build_client()
-    client.model.generate_content_async = AsyncMock(side_effect=asyncio.TimeoutError())
+    client.request_timeout_seconds = 0.01
+
+    def _slow_generate_content(*args, **kwargs):
+        time.sleep(1)
+        return MagicMock(text='{"reply":"ok"}')
+
+    client.model.generate_content = MagicMock(side_effect=_slow_generate_content)
 
     with pytest.raises(llm_client.LLMException):
         await client.complete("System", [{"role": "user", "content": "Hi"}])

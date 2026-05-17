@@ -10,12 +10,12 @@ CATALOG_CONTEXT_TEMPLATE: str = (
     "You are given a catalog of SHL assessments and conversation history. "
     "Select 1 to 10 assessments that best match the user needs. "
     "Return ONLY valid JSON that matches this structure:\n"
-    "{{\n"
-    "  \"reply\": \"...\",\n"
-    "  \"recommendations\": [\n"
-    "    {{\"name\": \"...\", \"url\": \"...\", \"test_type\": \"...\"}}\n"
+    '{{\n'
+    '  "reply": "...",\n'
+    '  "recommendations": [\n'
+    '    {{"name": "...", "url": "...", "test_type": "..."}}\n'
     "  ],\n"
-    "  \"end_of_conversation\": false\n"
+    '  "end_of_conversation": false\n'
     "}}\n\n"
     "Catalog items:\n"
     "{catalog_items}\n\n"
@@ -27,10 +27,10 @@ CLARIFY_PROMPT_TEMPLATE: str = (
     "You are missing key role or skill details. "
     "Using the conversation history below, ask exactly ONE focused clarifying question. "
     "Return ONLY valid JSON with an empty recommendations list:\n"
-    "{{\n"
-    "  \"reply\": \"...\",\n"
-    "  \"recommendations\": [],\n"
-    "  \"end_of_conversation\": false\n"
+    '{{\n'
+    '  "reply": "...",\n'
+    '  "recommendations": [],\n'
+    '  "end_of_conversation": false\n'
     "}}\n\n"
     "Conversation history:\n"
     "{history}"

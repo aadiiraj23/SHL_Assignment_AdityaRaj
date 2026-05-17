@@ -1,0 +1,14 @@
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.env
+.DS_Store
+*.md
+tests/
+.github/
+*.log
+# DO NOT ignore data directory - it's needed for production!
+# DO NOT ignore requirements.txt
