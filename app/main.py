@@ -44,33 +44,41 @@ _ready = False
 
 
 def _load_in_background():
-    """Load catalog + LLM + agent in a background thread so the port opens fast."""
     global _catalog, _llm, _agent, _ready
+    import traceback
+
     try:
         from app.catalog import get_catalog_store
+        logger.info("loading_catalog_start")
         _catalog = get_catalog_store()
         logger.info("catalog_loaded", size=_catalog.size())
     except Exception as e:
-        logger.error("catalog_load_failed", error=str(e))
+        logger.error("catalog_load_failed", error=str(e), trace=traceback.format_exc())
         _catalog = None
 
     try:
         from app.llm_client import get_llm_client
+        logger.info("loading_llm_start")
         _llm = get_llm_client()
         logger.info("llm_loaded")
     except Exception as e:
-        logger.error("llm_load_failed", error=str(e))
+        logger.error("llm_load_failed", error=str(e), trace=traceback.format_exc())
         _llm = None
 
     if _catalog and _llm:
-        from app.agent import SHLAgent
-        _agent = SHLAgent(catalog=_catalog, llm=_llm)
-        logger.info("agent_ready", catalog_size=_catalog.size())
+        try:
+            from app.agent import SHLAgent
+            _agent = SHLAgent(catalog=_catalog, llm=_llm)
+            logger.info("agent_ready", catalog_size=_catalog.size())
+        except Exception as e:
+            logger.error("agent_init_failed", error=str(e), trace=traceback.format_exc())
+            _agent = None
     else:
+        logger.error("agent_unavailable", catalog_ok=_catalog is not None, llm_ok=_llm is not None)
         _agent = None
-        logger.error("agent_unavailable")
 
     _ready = True
+    logger.info("background_loading_complete", agent_ready=_agent is not None)
 
 
 @asynccontextmanager

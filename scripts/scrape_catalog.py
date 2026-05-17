@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import asyncio
 import json
 import re
@@ -35,8 +33,9 @@ class SHLCatalogScraper:
     @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=2, max=10))
     async def fetch_page(self, client: httpx.AsyncClient, url: str) -> str:
         self.logger.info("fetching_catalog", url=url)
-        response = await client.get(url, headers=self.headers)
-        response.raise_for_status()
+        response = await client.get(url, headers=self.headers, follow_redirects=True)
+        if response.status_code >= 400:
+            response.raise_for_status()
         return response.text
 
     async def parse_catalog_page(self, html: str) -> list[dict]:
@@ -47,10 +46,12 @@ class SHLCatalogScraper:
             string=re.compile(r"\bIndividual Test Solutions\b", re.IGNORECASE)
         )
         if not section_header:
+            self.logger.warning("section_not_found", hint="Individual Test Solutions header missing")
             return []
 
         section_container = self._find_section_container(section_header)
         if not section_container:
+            self.logger.warning("section_container_not_found")
             return []
 
         assessments: list[dict] = []
@@ -64,6 +65,7 @@ class SHLCatalogScraper:
             full_url = urljoin(self.BASE_URL, href)
             assessments.append({"name": name, "url": full_url})
 
+        self.logger.info("catalog_page_parsed", found=len(assessments))
         return self._dedupe_assessments(assessments)
 
     async def parse_assessment_page(self, html: str, url: str, name: str) -> dict:
@@ -90,7 +92,11 @@ class SHLCatalogScraper:
 
     async def scrape_all(self) -> list[dict]:
         start_time = time.monotonic()
-        async with httpx.AsyncClient(timeout=self.timeout, headers=self.headers) as client:
+        async with httpx.AsyncClient(
+            timeout=self.timeout,
+            headers=self.headers,
+            follow_redirects=True
+        ) as client:
             page_url: str | None = self.CATALOG_URL
             all_links: list[dict] = []
 
@@ -99,6 +105,8 @@ class SHLCatalogScraper:
                 page_links = await self.parse_catalog_page(html)
                 all_links.extend(page_links)
                 page_url = self._next_page_url
+
+            self.logger.info("catalog_links_collected", total=len(all_links))
 
             for index, item in enumerate(all_links, start=1):
                 url = item["url"]
@@ -130,7 +138,7 @@ class SHLCatalogScraper:
                     "scraped_progress",
                     current=index,
                     total=len(all_links),
-                    url=url,
+                    name=item["name"],
                 )
                 await asyncio.sleep(0.5)
 
@@ -148,7 +156,11 @@ class SHLCatalogScraper:
             "assessments": self.assessments,
         }
         output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
-        self.logger.info("saved_catalog", path=str(output_path), total=len(self.assessments))
+        self.logger.info(
+            "saved_catalog",
+            path=str(output_path),
+            total=len(self.assessments)
+        )
 
     def _find_section_container(self, header_node) -> BeautifulSoup | None:
         current = header_node
@@ -174,11 +186,9 @@ class SHLCatalogScraper:
         meta = soup.find("meta", attrs={"name": "description"})
         if meta and meta.get("content"):
             return meta["content"].strip()
-
         main = soup.find("main") or soup.find("div", class_=re.compile("content", re.I))
         if main:
-            text = main.get_text(" ", strip=True)
-            return text
+            return main.get_text(" ", strip=True)
         return ""
 
     def _extract_duration_minutes(self, text: str) -> int | None:
@@ -194,8 +204,11 @@ class SHLCatalogScraper:
             if parent:
                 items = parent.find_all("li")
                 if items:
-                    return [item.get_text(strip=True) for item in items if item.get_text(strip=True)]
-
+                    return [
+                        item.get_text(strip=True)
+                        for item in items
+                        if item.get_text(strip=True)
+                    ]
                 text = parent.get_text(" ", strip=True)
                 match = re.search(r"Languages?:\s*(.+)", text, re.I)
                 if match:
@@ -231,7 +244,12 @@ class SHLCatalogScraper:
         return unique
 
     def _now_iso(self) -> str:
-        return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+        return (
+            datetime.now(timezone.utc)
+            .replace(microsecond=0)
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
 
 
 if __name__ == "__main__":
