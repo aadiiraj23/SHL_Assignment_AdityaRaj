@@ -75,8 +75,8 @@ async def timing_middleware(request: Request, call_next):
     return response
 
 
-@app.get("/health")
-def health() -> dict:
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health(request: Request):
     try:
         catalog = get_catalog_store()
         size = catalog.size()
