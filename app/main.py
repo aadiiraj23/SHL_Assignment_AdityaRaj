@@ -1,13 +1,11 @@
 import os
 import time
+import threading
 import structlog
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from app.agent import SHLAgent
-from app.catalog import get_catalog_store
-from app.llm_client import get_llm_client
 from app.models import ChatRequest, ChatResponse
 
 
@@ -38,17 +36,18 @@ def _configure_logging() -> None:
 _configure_logging()
 logger = structlog.get_logger()
 
-# ── Global singletons loaded ONCE at startup ──────────────────────────────────
+# ── Global singletons ─────────────────────────────────────────────────────────
 _catalog = None
 _llm = None
 _agent = None
+_ready = False
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    global _catalog, _llm, _agent
-    logger.info("startup_begin")
+def _load_in_background():
+    """Load catalog + LLM + agent in a background thread so the port opens fast."""
+    global _catalog, _llm, _agent, _ready
     try:
+        from app.catalog import get_catalog_store
         _catalog = get_catalog_store()
         logger.info("catalog_loaded", size=_catalog.size())
     except Exception as e:
@@ -56,6 +55,7 @@ async def lifespan(app: FastAPI):
         _catalog = None
 
     try:
+        from app.llm_client import get_llm_client
         _llm = get_llm_client()
         logger.info("llm_loaded")
     except Exception as e:
@@ -63,14 +63,23 @@ async def lifespan(app: FastAPI):
         _llm = None
 
     if _catalog and _llm:
+        from app.agent import SHLAgent
         _agent = SHLAgent(catalog=_catalog, llm=_llm)
-        logger.info("agent_ready")
+        logger.info("agent_ready", catalog_size=_catalog.size())
     else:
         _agent = None
         logger.error("agent_unavailable")
 
-    yield
+    _ready = True
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Start background loading immediately — don't block port binding
+    t = threading.Thread(target=_load_in_background, daemon=True)
+    t.start()
+    logger.info("background_loading_started")
+    yield
     logger.info("shutdown")
 
 
@@ -117,10 +126,12 @@ async def timing_middleware(request: Request, call_next):
 
 @app.api_route("/health", methods=["GET", "HEAD"])
 async def health(request: Request):
+    # Always returns 200 immediately — even during startup
     return {
         "status": "ok",
         "catalog_size": _catalog.size() if _catalog else 0,
         "agent_ready": _agent is not None,
+        "loading": not _ready,
         "version": "1.0.0"
     }
 
@@ -131,7 +142,7 @@ async def chat(request: ChatRequest):
         return JSONResponse(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             content={
-                "reply": "Service is starting up, please try again in a moment.",
+                "reply": "Service is still loading, please try again in a moment.",
                 "recommendations": [],
                 "end_of_conversation": False
             }
@@ -149,4 +160,3 @@ async def chat(request: ChatRequest):
                 "end_of_conversation": False
             }
         )
-    
