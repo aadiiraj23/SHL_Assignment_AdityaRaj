@@ -61,43 +61,66 @@ class CatalogStore:
             f"Languages: {', '.join(a.languages)}."
         )
 
+    def _lazy_load_model(self) -> None:
+        """Helper to ensure the heavy embedding model is loaded only when required at runtime."""
+        if self.model is None:
+            from sentence_transformers import SentenceTransformer
+            self.model = SentenceTransformer("all-MiniLM-L6-v2")
+
     def _build_index(self) -> None:
-        start_time = time.time()
-        from sentence_transformers import SentenceTransformer
+        import pickle
 
-        if not self.assessments:
-            self.embeddings = np.empty((0, 0), dtype="float32")
-            self.index = None
-            self.bm25 = None
-            self.model = None
-            logger.info("catalog_index_empty")
-            return
+        index_cache = Path("data/faiss_index.bin")
+        embeddings_cache = Path("data/embeddings.npy")
+        bm25_cache = Path("data/bm25.pkl")
 
-        documents = [self._make_document(assessment) for assessment in self.assessments]
-        model = SentenceTransformer("all-MiniLM-L6-v2")
-        vectors = model.encode(documents, show_progress_bar=False).astype("float32")
-        vectors = self._l2_normalize(vectors)
-
-        index = faiss.IndexFlatIP(vectors.shape[1])
-        index.add(vectors)
-
+        documents = [self._make_document(a) for a in self.assessments]
         tokenized = [doc.lower().split() for doc in documents]
-        bm25 = BM25Okapi(tokenized)
 
-        self.embeddings = vectors
-        self.index = index
-        self.bm25 = bm25
-        self.model = model
+        # Load from cache if available — avoids slow rebuild on cold start
+        if index_cache.exists() and embeddings_cache.exists() and bm25_cache.exists():
+            try:
+                t0 = time.time()
+                self.embeddings = np.load(str(embeddings_cache))
+                self.index = faiss.read_index(str(index_cache))
+                with open(bm25_cache, "rb") as f:
+                    self.bm25 = pickle.load(f)
+                
+                # Explicity leave model as None to completely skip weight parsing during cold start
+                self.model = None
+                logger.info(
+                    "index_loaded_from_cache",
+                    seconds=round(time.time() - t0, 2)
+                )
+                return
+            except Exception as e:
+                logger.warning("cache_load_failed_rebuilding", error=str(e))
 
-        logger.info("catalog_index_built", seconds=round(time.time() - start_time, 2))
+        # Build from scratch if no cache found
+        t0 = time.time()
+        from sentence_transformers import SentenceTransformer
+        self.model = SentenceTransformer("all-MiniLM-L6-v2")
+        self.embeddings = self.model.encode(
+            documents, show_progress_bar=False
+        ).astype("float32")
+        faiss.normalize_L2(self.embeddings)
+        self.index = faiss.IndexFlatIP(self.embeddings.shape[1])
+        self.index.add(self.embeddings)
+        self.bm25 = BM25Okapi(tokenized)
+        logger.info(
+            "catalog_index_built",
+            seconds=round(time.time() - t0, 2)
+        )
 
     def semantic_search(self, query: str, k: int = 10) -> list[Assessment]:
-        if not self.index or not self.model or not self.assessments:
+        if not self.index or not self.assessments:
             return []
         limit = min(k, len(self.assessments))
         if limit <= 0:
             return []
 
+        # Intercept and instantiate model right before its first user application lookup
+        self._lazy_load_model()
         query_vector = self.model.encode([query], show_progress_bar=False).astype(
             "float32"
         )
@@ -190,8 +213,11 @@ class CatalogStore:
         return vectors / norms
 
     def _semantic_scores(self, query: str, k: int) -> list[tuple[Assessment, float]]:
-        if not self.index or not self.model or not self.assessments:
+        if not self.index or not self.assessments:
             return []
+            
+        # Ensure model is ready when processing raw hybrid strings
+        self._lazy_load_model()
         query_vector = self.model.encode([query], show_progress_bar=False).astype(
             "float32"
         )
