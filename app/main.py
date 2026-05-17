@@ -1,6 +1,7 @@
 import os
 import time
 import structlog
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -37,7 +38,47 @@ def _configure_logging() -> None:
 _configure_logging()
 logger = structlog.get_logger()
 
-app = FastAPI(title="SHL Assessment Recommender API", version="1.0.0")
+# ── Global singletons loaded ONCE at startup ──────────────────────────────────
+_catalog = None
+_llm = None
+_agent = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global _catalog, _llm, _agent
+    logger.info("startup_begin")
+    try:
+        _catalog = get_catalog_store()
+        logger.info("catalog_loaded", size=_catalog.size())
+    except Exception as e:
+        logger.error("catalog_load_failed", error=str(e))
+        _catalog = None
+
+    try:
+        _llm = get_llm_client()
+        logger.info("llm_loaded")
+    except Exception as e:
+        logger.error("llm_load_failed", error=str(e))
+        _llm = None
+
+    if _catalog and _llm:
+        _agent = SHLAgent(catalog=_catalog, llm=_llm)
+        logger.info("agent_ready")
+    else:
+        _agent = None
+        logger.error("agent_unavailable")
+
+    yield
+
+    logger.info("shutdown")
+
+
+app = FastAPI(
+    title="SHL Assessment Recommender API",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -59,7 +100,6 @@ async def timing_middleware(request: Request, call_next):
             "request_failed",
             method=request.method,
             path=request.url.path,
-            status_code=500,
             duration_ms=duration_ms,
             error=str(exc),
         )
@@ -77,37 +117,35 @@ async def timing_middleware(request: Request, call_next):
 
 @app.api_route("/health", methods=["GET", "HEAD"])
 async def health(request: Request):
-    try:
-        catalog = get_catalog_store()
-        size = catalog.size()
-        agent_ready = True
-    except Exception:
-        size = 0
-        agent_ready = False
     return {
         "status": "ok",
-        "catalog_size": size,
-        "agent_ready": agent_ready,
+        "catalog_size": _catalog.size() if _catalog else 0,
+        "agent_ready": _agent is not None,
         "version": "1.0.0"
     }
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
+    if _agent is None:
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={
+                "reply": "Service is starting up, please try again in a moment.",
+                "recommendations": [],
+                "end_of_conversation": False
+            }
+        )
     try:
-        catalog = get_catalog_store()
-        llm = get_llm_client()
-        agent = SHLAgent(catalog=catalog, llm=llm)
-        response = await agent.run(request)
+        response = await _agent.run(request)
         return response
     except Exception as exc:
         logger.error("chat_request_failed", error=str(exc))
-        error_response = ChatResponse(
-            reply="I encountered an internal server error. Please try again.",
-            recommendations=[],
-            end_of_conversation=False,
-        )
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content=error_response.model_dump(),
+            content={
+                "reply": "I encountered an internal error. Please try again.",
+                "recommendations": [],
+                "end_of_conversation": False
+            }
         )
