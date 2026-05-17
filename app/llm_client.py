@@ -5,6 +5,7 @@ import re
 from typing import Optional
 
 import google.generativeai as genai
+from google.api_core.exceptions import GoogleAPIError
 import structlog
 from tenacity import (
     retry,
@@ -57,25 +58,32 @@ class GeminiClient:
         )
 
         if json_mode:
-            prompt += "\nRespond ONLY with valid JSON. No markdown fences. No explanation."
+            prompt += "\nRespond ONLY with valid JSON string representing the output schema."
 
         return prompt
 
+    # Only retry genuine Google API or Network connectivity errors, NOT internal parse exceptions
     @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(min=1, max=8),
-        retry=retry_if_exception_type(Exception),
+        stop=stop_after_attempt(2),
+        wait=wait_exponential(min=1, max=4),
+        retry=retry_if_exception_type((GoogleAPIError, IOError)),
         reraise=True,
     )
     async def complete(self, system: str, messages: list, json_mode: bool = False) -> str:
         prompt = self._build_prompt(system, messages, json_mode=json_mode)
+        
+        # Enforce JSON formatting natively within Gemini configuration
+        gen_config = {
+            "temperature": 0.2,
+            "max_output_tokens": 1000,
+        }
+        if json_mode:
+            gen_config["response_mime_type"] = "application/json"
+
         try:
             response = await self.model.generate_content_async(
                 prompt,
-                generation_config={
-                    "temperature": 0.2,
-                    "max_output_tokens": 1000,
-                },
+                generation_config=gen_config,
             )
             text = getattr(response, "text", "") or ""
             cleaned = self._strip_json_fences(text)
@@ -88,7 +96,9 @@ class GeminiClient:
     def _strip_json_fences(text: str) -> str:
         if not text:
             return ""
-        fenced_match = re.search(r"```(?:json)?\s*(.*?)\s*```", text, re.DOTALL)
+        # Using hex character escapes (\x60 is a backtick) avoids literal triple backticks in code blocks
+        pattern = r"\x60{3}(?:json)?\s*(.*?)\s*\x60{3}"
+        fenced_match = re.search(pattern, text, re.DOTALL)
         return fenced_match.group(1) if fenced_match else text
 
 
