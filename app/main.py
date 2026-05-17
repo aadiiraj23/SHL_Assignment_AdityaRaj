@@ -1,4 +1,14 @@
 import os
+
+# Force deep learning frameworks to operate in a low-overhead, single-core mode
+# This completely prevents multi-threading spikes from crashing Render's 512MB RAM container
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
+os.environ["NUMEXPR_NUM_THREADS"] = "1"
+os.environ["TORCH_NUM_THREADS"] = "1"
+
 import time
 import threading
 import structlog
@@ -134,7 +144,6 @@ async def timing_middleware(request: Request, call_next):
 
 @app.api_route("/health", methods=["GET", "HEAD"])
 async def health(request: Request):
-    # Always returns 200 immediately — even during startup
     return {
         "status": "ok",
         "catalog_size": _catalog.size() if _catalog else 0,
