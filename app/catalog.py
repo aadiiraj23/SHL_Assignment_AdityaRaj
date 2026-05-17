@@ -75,7 +75,11 @@ class CatalogStore:
             try:
                 import torch
                 torch.set_num_threads(1)
-                torch.set_num_interop_threads(1)
+                try:
+                    torch.set_num_interop_threads(1)
+                except RuntimeError:
+                    # Ignore if already set or after parallel work has started
+                    pass
             except ImportError:
                 pass
 
@@ -134,12 +138,19 @@ class CatalogStore:
             return []
 
         self._lazy_load_model()
-        # FAST INT8 COMPRESSION FOR LOWER CPU COMPUTATION TIMES
-        query_vector = self.model.encode(
-            [query], 
-            show_progress_bar=False, 
-            precision="int8"
-        ).astype("float32")
+        # Encode without precision parameter for broader compatibility
+        try:
+            query_vector = self.model.encode(
+                [query], 
+                show_progress_bar=False, 
+                precision="int8"
+            ).astype("float32")
+        except TypeError:
+            # Fallback for older sentence-transformers versions that don't support precision
+            query_vector = self.model.encode(
+                [query], 
+                show_progress_bar=False
+            ).astype("float32")
         
         query_vector = self._l2_normalize(query_vector)
         scores, indices = self.index.search(query_vector, limit)
@@ -158,7 +169,8 @@ class CatalogStore:
         ranked = sorted(
             enumerate(scores), key=lambda item: item[1], reverse=True
         )
-        return [self.assessments[idx] for idx, _ in ranked[:limit]]
+        # Filter out invalid indices and limit results
+        return [self.assessments[idx] for idx, _ in ranked[:limit] if idx < len(self.assessments)]
 
     def hybrid_search(self, query: str, k: int = 10, alpha: float = 0.7) -> list[Assessment]:
         if not self.assessments:
@@ -234,12 +246,19 @@ class CatalogStore:
             return []
             
         self._lazy_load_model()
-        # FAST INT8 COMPRESSION HERE AS WELL FOR HYBRID ENDPOINTS
-        query_vector = self.model.encode(
-            [query], 
-            show_progress_bar=False, 
-            precision="int8"
-        ).astype("float32")
+        # Encode with fallback for older sentence-transformers versions
+        try:
+            query_vector = self.model.encode(
+                [query], 
+                show_progress_bar=False, 
+                precision="int8"
+            ).astype("float32")
+        except TypeError:
+            # Fallback for older sentence-transformers versions that don't support precision
+            query_vector = self.model.encode(
+                [query], 
+                show_progress_bar=False
+            ).astype("float32")
         
         query_vector = self._l2_normalize(query_vector)
         scores, indices = self.index.search(query_vector, k)
