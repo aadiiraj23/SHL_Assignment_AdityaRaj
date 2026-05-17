@@ -86,7 +86,7 @@ class CatalogStore:
                 with open(bm25_cache, "rb") as f:
                     self.bm25 = pickle.load(f)
                 
-                # Explicity leave model as None to completely skip weight parsing during cold start
+                # Explicitly leave model as None to completely skip weight parsing during cold start
                 self.model = None
                 logger.info(
                     "index_loaded_from_cache",
@@ -119,11 +119,14 @@ class CatalogStore:
         if limit <= 0:
             return []
 
-        # Intercept and instantiate model right before its first user application lookup
         self._lazy_load_model()
-        query_vector = self.model.encode([query], show_progress_bar=False).astype(
-            "float32"
-        )
+        # FAST INT8 COMPRESSION FOR LOWER CPU COMPUTATION TIMES
+        query_vector = self.model.encode(
+            [query], 
+            show_progress_bar=False, 
+            precision="int8"
+        ).astype("float32")
+        
         query_vector = self._l2_normalize(query_vector)
         scores, indices = self.index.search(query_vector, limit)
         result_indices = indices[0].tolist()
@@ -216,11 +219,14 @@ class CatalogStore:
         if not self.index or not self.assessments:
             return []
             
-        # Ensure model is ready when processing raw hybrid strings
         self._lazy_load_model()
-        query_vector = self.model.encode([query], show_progress_bar=False).astype(
-            "float32"
-        )
+        # FAST INT8 COMPRESSION HERE AS WELL FOR HYBRID ENDPOINTS
+        query_vector = self.model.encode(
+            [query], 
+            show_progress_bar=False, 
+            precision="int8"
+        ).astype("float32")
+        
         query_vector = self._l2_normalize(query_vector)
         scores, indices = self.index.search(query_vector, k)
         candidates: list[tuple[Assessment, float]] = []
