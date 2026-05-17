@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import re
 from typing import Optional
@@ -81,13 +82,19 @@ class GeminiClient:
             gen_config["response_mime_type"] = "application/json"
 
         try:
-            response = await self.model.generate_content_async(
-                prompt,
-                generation_config=gen_config,
+            response = await asyncio.wait_for(
+                self.model.generate_content_async(
+                    prompt,
+                    generation_config=gen_config,
+                ),
+                timeout=30,
             )
             text = getattr(response, "text", "") or ""
             cleaned = self._strip_json_fences(text)
             return cleaned.strip()
+        except asyncio.TimeoutError as exc:
+            self.logger.warning("llm_completion_timeout", timeout_seconds=30)
+            raise LLMException("LLM completion timed out") from exc
         except Exception as exc:
             self.logger.exception("llm_completion_failed", error=str(exc))
             raise LLMException("LLM completion failed") from exc

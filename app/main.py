@@ -10,6 +10,7 @@ os.environ["NUMEXPR_NUM_THREADS"] = "1"
 os.environ["TORCH_NUM_THREADS"] = "1"
 
 import time
+import asyncio
 import threading
 import structlog
 from contextlib import asynccontextmanager
@@ -165,8 +166,18 @@ async def chat(request: ChatRequest):
             }
         )
     try:
-        response = await _agent.run(request)
+        response = await asyncio.wait_for(_agent.run(request), timeout=45)
         return response
+    except asyncio.TimeoutError:
+        logger.error("chat_request_timeout")
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "reply": "I encountered an internal error. Please try again.",
+                "recommendations": [],
+                "end_of_conversation": False
+            }
+        )
     except Exception as exc:
         logger.error("chat_request_failed", error=str(exc))
         return JSONResponse(

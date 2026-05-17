@@ -1,4 +1,5 @@
 from __future__ import annotations
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 import httpx
@@ -73,6 +74,34 @@ async def test_chat_endpoint_server_error_fallback():
     broken_agent.run = AsyncMock(side_effect=RuntimeError("boom"))
     original_agent = main_module._agent
     main_module._agent = broken_agent
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app), base_url="http://test"
+        ) as ac:
+            response = await ac.post(
+                "/chat",
+                json={"messages": [{"role": "user", "content": "Need assessment"}]},
+            )
+        payload = response.json()
+        assert response.status_code == 200
+        assert payload["end_of_conversation"] is False
+        assert payload["recommendations"] == []
+        assert "error" in payload["reply"].lower() or "encountered" in payload["reply"].lower()
+    finally:
+        main_module._agent = original_agent
+
+
+@pytest.mark.asyncio
+async def test_chat_endpoint_timeout_fallback():
+    import app.main as main_module
+    slow_agent = MagicMock()
+
+    async def _slow_run(*args, **kwargs):
+        await asyncio.sleep(60)
+
+    slow_agent.run = AsyncMock(side_effect=_slow_run)
+    original_agent = main_module._agent
+    main_module._agent = slow_agent
     try:
         async with AsyncClient(
             transport=ASGITransport(app=app), base_url="http://test"
